@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
 import useAuthStore from './store/authStore'
+import { isMisconfigured } from './services/supabase'
 
 import Layout from './components/Layout'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -23,6 +24,24 @@ export default function App() {
   const init = useAuthStore((s) => s.init)
 
   useEffect(() => { init() }, [init])
+
+  if (isMisconfigured) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+        <div className="max-w-md text-center">
+          <div className="text-5xl mb-4">⚙️</div>
+          <h1 className="text-xl font-bold text-gray-900 mb-2">Missing Supabase configuration</h1>
+          <p className="text-gray-500 text-sm mb-4">
+            The app requires <code className="bg-gray-100 px-1 rounded">VITE_SUPABASE_URL</code> and{' '}
+            <code className="bg-gray-100 px-1 rounded">VITE_SUPABASE_ANON_KEY</code> to be set.
+          </p>
+          <p className="text-gray-400 text-xs">
+            Add them as GitHub Actions secrets and re-run the deploy workflow.
+          </p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <HashRouter>

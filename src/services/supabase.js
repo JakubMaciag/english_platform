@@ -82,7 +82,7 @@ export const profileService = {
 }
 
 export const dictionaryService = {
-  async search({ query = '', dictType = 'all', level = 'all', page = 0, pageSize = 20 }) {
+  async search({ query = '', dictType = 'all', level = 'all', page = 0, pageSize = 20, userOnly = false, userId = null }) {
     let q = supabase
       .from('dictionary_entries')
       .select('*', { count: 'exact' })
@@ -92,6 +92,7 @@ export const dictionaryService = {
     if (dictType !== 'all') q = q.eq('dict_type', dictType)
     if (level !== 'all') q = q.or(`level.eq.${level},level.eq.all`)
     if (query) q = q.or(`word.ilike.%${query}%,translation.ilike.%${query}%`)
+    if (userOnly && userId) q = q.eq('user_id', userId)
 
     const { data, error, count } = await q
     if (error) throw error
@@ -102,6 +103,16 @@ export const dictionaryService = {
     const { data, error } = await supabase
       .from('dictionary_entries')
       .insert(entry)
+      .select()
+      .single()
+    if (error) throw error
+    return data
+  },
+
+  async createUserEntry(userId, entry) {
+    const { data, error } = await supabase
+      .from('dictionary_entries')
+      .insert({ ...entry, user_id: userId })
       .select()
       .single()
     if (error) throw error
@@ -119,8 +130,29 @@ export const dictionaryService = {
     return data
   },
 
+  async updateUserEntry(id, userId, entry) {
+    const { data, error } = await supabase
+      .from('dictionary_entries')
+      .update(entry)
+      .eq('id', id)
+      .eq('user_id', userId)
+      .select()
+      .single()
+    if (error) throw error
+    return data
+  },
+
   async remove(id) {
     const { error } = await supabase.from('dictionary_entries').delete().eq('id', id)
+    if (error) throw error
+  },
+
+  async removeUserEntry(id, userId) {
+    const { error } = await supabase
+      .from('dictionary_entries')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', userId)
     if (error) throw error
   },
 }

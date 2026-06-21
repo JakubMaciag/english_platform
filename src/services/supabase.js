@@ -3,11 +3,13 @@ import { createClient } from '@supabase/supabase-js'
 const url = import.meta.env.VITE_SUPABASE_URL
 const key = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-if (!url || !key) {
-  throw new Error('Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY in .env')
-}
+const missingConfig = !url || !key
 
-export const supabase = createClient(url, key)
+export const supabase = missingConfig
+  ? null
+  : createClient(url, key)
+
+export const isMisconfigured = missingConfig
 
 // Auth helpers — username is stored as {username}@engplatform.app internally
 const toEmail = (username) => `${username.toLowerCase().trim()}@engplatform.app`
